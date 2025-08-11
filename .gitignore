@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C++ build
+build/
+dist/
+*.egg-info/
+
+# VSCode
+.vscode/
+
+# Python virtual environments
+.venv/
+venv/
+
+# MacOS
+.DS_Store
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Test cache
+.pytest_cache/
+
+# Ignore logs
+*.log

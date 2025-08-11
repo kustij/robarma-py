@@ -1,0 +1,17 @@
+
+
+[tool.scikit-build]
+wheel.packages = ["robarma"]
+
+[build-system]
+requires = ["scikit-build-core", "setuptools", "wheel", "pybind11", "cmake"]
+build-backend = "scikit_build_core.build"
+
+[project]
+
+name = "robarma"
+version = "0.1.0"
+description = "Python bindings for the robarma C++ library"
+authors = [{ name = "Kusti Aholainen", email = "kusti.aholainen@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.7"
