@@ -15,3 +15,4 @@ description = "Python bindings for the robarma C++ library"
 authors = [{ name = "Kusti Aholainen", email = "kusti.aholainen@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.7"
+dependencies = ["numpy >= 2.0.0"]
