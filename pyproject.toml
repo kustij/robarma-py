@@ -1,5 +1,3 @@
-
-
 [tool.scikit-build]
 wheel.packages = ["robarma"]
 
