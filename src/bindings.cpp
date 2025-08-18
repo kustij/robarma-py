@@ -49,7 +49,13 @@ PYBIND11_MODULE(_robarma, m)
             Optional optimizer report
     )pbdoc")
         .def(py::init<>())
-        .def_readwrite("method", &estimation_result::method)
+        .def_property(
+            "method",
+            [](const estimation_result &self)
+            { return self.method; },
+            [](estimation_result &self, estimation_method value)
+            { self.method = value; },
+            "Which estimation method was used (estimation_method)")
         .def_readwrite("convergence", &estimation_result::convergence)
         .def_readwrite("final_cost", &estimation_result::final_cost)
         .def_readwrite("report", &estimation_result::report)

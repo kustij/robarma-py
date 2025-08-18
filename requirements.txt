@@ -1,0 +1,3 @@
+# Example requirements.txt for a project using RobARMA
+numpy>=2.0.0
+-e ../robarma-py
