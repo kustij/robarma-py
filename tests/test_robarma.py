@@ -21,7 +21,8 @@ def test_simulate():
     theta = np.array([0.2])
     mu = 1.0
     n = 50
-    result = robarma.simulate(phi=phi, theta=theta, mu=mu, n=n)
+    e = np.random.standard_cauchy(n)
+    result = robarma.simulate(phi=phi, theta=theta, mu=mu, n=n, e=e)
     assert isinstance(result, np.ndarray)
     assert result.shape == (n,)
 

@@ -233,6 +233,7 @@ PYBIND11_MODULE(_robarma, m)
           py::arg("theta") = Eigen::VectorXd{},
           py::arg("mu") = 0.0,
           py::arg("n") = 100,
+          py::arg("e") = Eigen::VectorXd{},
           py::arg("burn_in") = 100,
           py::arg("seed") = 0,
           R"pbdoc(
@@ -248,6 +249,8 @@ PYBIND11_MODULE(_robarma, m)
             Location parameter (default: 0.0)
         n : int, optional
             Sample size (default: 100)
+        e : numpy.ndarray, optional
+            Innovations (must be of length n) (default: empty)
         burn_in : int, optional
             Burn-in period (default: 100)
         seed : int, optional

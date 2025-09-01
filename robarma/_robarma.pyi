@@ -234,7 +234,6 @@ class estimation_result:
         
     """
     convergence: bool
-    method: ...
     report: str
     def __init__(self) -> None:
         ...
@@ -245,6 +244,14 @@ class estimation_result:
         ...
     @final_cost.setter
     def final_cost(self, arg0: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def method(self) -> ...:
+        """
+        Which estimation method was used (estimation_method)
+        """
+    @method.setter
+    def method(self, arg1: ...) -> None:
         ...
 def bip_mm(model: arma_model) -> arma_fit:
     """
@@ -330,7 +337,7 @@ def s(model: arma_model) -> arma_fit:
             arma_fit
                 The fit result, including estimated parameters and diagnostics.
     """
-def simulate(phi: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"] = ..., theta: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"] = ..., mu: typing.SupportsFloat = 0.0, n: typing.SupportsInt = 100, burn_in: typing.SupportsInt = 100, seed: typing.SupportsInt = 0) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
+def simulate(phi: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"] = ..., theta: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"] = ..., mu: typing.SupportsFloat = 0.0, n: typing.SupportsInt = 100, e: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"] = ..., burn_in: typing.SupportsInt = 100, seed: typing.SupportsInt = 0) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
     """
             Simulate an ARMA(p, q) process with normal errors.
             
@@ -344,6 +351,8 @@ def simulate(phi: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1
                 Location parameter (default: 0.0)
             n : int, optional
                 Sample size (default: 100)
+            e : numpy.ndarray, optional
+                Innovations (must be of length n) (default: empty)
             burn_in : int, optional
                 Burn-in period (default: 100)
             seed : int, optional
