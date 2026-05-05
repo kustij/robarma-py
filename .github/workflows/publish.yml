@@ -12,17 +12,32 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
           pip install build twine
-      - name: Build package
+
+      - name: Install vcpkg
         run: |
-          python -m build
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Install C++ dependencies with vcpkg
+        run: |
+          ./vcpkg/vcpkg install eigen3 ceres
+
+      - name: Build package
+        env:
+          CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        run: |
+          python -m build --config-setting=cmake.args="-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
