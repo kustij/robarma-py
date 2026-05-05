@@ -36,9 +36,13 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: |
             yum install -y epel-release && yum install -y eigen3-devel ceres-solver-devel
           CIBW_BEFORE_ALL_MACOS: |
-            brew install eigen ceres-solver
+            git clone https://github.com/microsoft/vcpkg.git
+            ./vcpkg/bootstrap-vcpkg.sh
+            ./vcpkg/vcpkg install eigen3 ceres
           CIBW_BEFORE_ALL_WINDOWS: |
-            choco install eigen ceres-solver -y
+            git clone https://github.com/microsoft/vcpkg.git
+            .\vcpkg\bootstrap-vcpkg.bat
+            .\vcpkg\vcpkg.exe install eigen3 ceres
 
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
