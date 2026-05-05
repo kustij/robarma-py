@@ -27,10 +27,13 @@ cd robarma-py
 git submodule update --init --recursive
 ```
 
-Then install with pip (in a virtual environment):
+### Building
+
+Ceres and Eigen are required.
+Simplest way is to use vcpkg and pass it to pip install as
 
 ```sh
-pip install .
+pip install . --config-settings=cmake.args="-DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake"
 ```
 
 ## Usage
