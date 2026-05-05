@@ -8,7 +8,7 @@ build-backend = "scikit_build_core.build"
 [project]
 
 name = "robarma"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python bindings for the robarma C++ library"
 authors = [{ name = "Kusti Aholainen", email = "kusti.aholainen@gmail.com" }]
 readme = "README.md"
