@@ -103,7 +103,9 @@ jobs:
               cp -a "$CACHE_DIR"/. /ceres-install/
             else
               rm -rf ceres-solver /ceres-install
-              git clone --depth 1 --branch 2.2.0 --recurse-submodules --shallow-submodules https://github.com/ceres-solver/ceres-solver.git
+              git clone --depth 1 --branch 2.2.0 https://github.com/ceres-solver/ceres-solver.git
+              git -C ceres-solver submodule sync --recursive
+              git -C ceres-solver submodule update --init --recursive
               test -f ceres-solver/third_party/abseil-cpp/CMakeLists.txt
               cmake -S ceres-solver -B ceres-solver/build \
                 -DCMAKE_BUILD_TYPE=Release \
