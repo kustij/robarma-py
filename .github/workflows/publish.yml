@@ -41,6 +41,8 @@ jobs:
             cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCUMENTATION=OFF -DCMAKE_INSTALL_PREFIX=/ceres-install
             make -j$(nproc)
             make install
+            echo "Searching for CeresConfig.cmake in /ceres-install:"
+            find /ceres-install -name 'CeresConfig.cmake' || (echo 'CeresConfig.cmake not found!' && exit 1)
             cd /project
           CIBW_ENVIRONMENT_LINUX: CMAKE_PREFIX_PATH=/ceres-install
           CIBW_BEFORE_ALL_MACOS: |
