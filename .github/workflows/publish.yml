@@ -63,8 +63,9 @@ jobs:
             test -f /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
             echo "Installed Ceres config:"
             ls -l /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
-          CIBW_ENVIRONMENT_LINUX: "CMAKE_PREFIX_PATH=/ceres-install
-            Ceres_DIR=/ceres-install/lib/cmake/Ceres"
+          CIBW_ENVIRONMENT_LINUX: >-
+            CMAKE_PREFIX_PATH=/ceres-install
+            Ceres_DIR=/ceres-install/lib/cmake/Ceres
           CIBW_BEFORE_ALL_MACOS: |
             rm -rf /tmp/vcpkg
             git clone --depth 1 https://github.com/microsoft/vcpkg.git /tmp/vcpkg
@@ -76,9 +77,10 @@ jobs:
             git clone --depth 1 https://github.com/microsoft/vcpkg.git C:\vcpkg
             C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
             C:\vcpkg\vcpkg.exe install --triplet x64-windows eigen3 ceres
-          CIBW_ENVIRONMENT_WINDOWS: "CMAKE_PREFIX_PATH=C:/vcpkg/installed/x64-windows
-            Eigen3_DIR=C:/vcpkg/installed/x64-windows/share/eigen3
-            Ceres_DIR=C:/vcpkg/installed/x64-windows/share/ceres"
+            if not exist C:\vcpkg\scripts\buildsystems\vcpkg.cmake exit /b 1
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+            VCPKG_TARGET_TRIPLET=x64-windows
 
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
