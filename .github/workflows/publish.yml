@@ -95,40 +95,49 @@ jobs:
             $PKG_MGR install -y epel-release
             $PKG_MGR install -y cmake git gcc-c++ make eigen3-devel
 
-            CACHE_DIR=/project/.ci-cache/ceres-install-linux
-            if [ -f "$CACHE_DIR/lib/cmake/Ceres/CeresConfig.cmake" ]; then
-              echo "Using cached Ceres from $CACHE_DIR"
-              rm -rf /ceres-install
-              mkdir -p /ceres-install
-              cp -a "$CACHE_DIR"/. /ceres-install/
-            else
-              rm -rf ceres-solver /ceres-install
-              git clone --depth 1 --branch 2.2.0 https://github.com/ceres-solver/ceres-solver.git
-              test -f ceres-solver/CMakeLists.txt
-              cmake -S ceres-solver -B ceres-solver/build \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_INSTALL_PREFIX=/ceres-install \
-                -DCMAKE_INSTALL_LIBDIR=lib \
-                -DBUILD_TESTING=OFF \
-                -DBUILD_EXAMPLES=OFF \
-                -DBUILD_BENCHMARKS=OFF \
-                -DMINIGLOG=ON \
-                -DSUITESPARSE=OFF \
-                -DLAPACK=OFF
-              cmake --build ceres-solver/build --parallel
-              cmake --install ceres-solver/build
-
-              mkdir -p "$CACHE_DIR"
-              rm -rf "$CACHE_DIR"/*
-              cp -a /ceres-install/. "$CACHE_DIR"/
+            DISTRO_CERES_CONFIG=""
+            if $PKG_MGR install -y ceres-solver-devel; then
+              DISTRO_CERES_CONFIG=$(find /usr /usr/local -type f -path "*/cmake/Ceres/CeresConfig.cmake" | head -n 1 || true)
             fi
 
-            test -f /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
-            echo "Installed Ceres config:"
-            ls -l /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
+            if [ -n "$DISTRO_CERES_CONFIG" ]; then
+              echo "Using distro Ceres config: $DISTRO_CERES_CONFIG"
+              ls -l "$DISTRO_CERES_CONFIG"
+            else
+              CACHE_DIR=/project/.ci-cache/ceres-install-linux
+              if [ -f "$CACHE_DIR/lib/cmake/Ceres/CeresConfig.cmake" ]; then
+                echo "Using cached source-built Ceres from $CACHE_DIR"
+                rm -rf /ceres-install
+                mkdir -p /ceres-install
+                cp -a "$CACHE_DIR"/. /ceres-install/
+              else
+                rm -rf ceres-solver /ceres-install
+                git clone --depth 1 --branch 2.2.0 https://github.com/ceres-solver/ceres-solver.git
+                test -f ceres-solver/CMakeLists.txt
+                cmake -S ceres-solver -B ceres-solver/build \
+                  -DCMAKE_BUILD_TYPE=Release \
+                  -DCMAKE_INSTALL_PREFIX=/ceres-install \
+                  -DCMAKE_INSTALL_LIBDIR=lib \
+                  -DBUILD_TESTING=OFF \
+                  -DBUILD_EXAMPLES=OFF \
+                  -DBUILD_BENCHMARKS=OFF \
+                  -DMINIGLOG=ON \
+                  -DSUITESPARSE=OFF \
+                  -DLAPACK=OFF
+                cmake --build ceres-solver/build --parallel
+                cmake --install ceres-solver/build
+
+                mkdir -p "$CACHE_DIR"
+                rm -rf "$CACHE_DIR"/*
+                cp -a /ceres-install/. "$CACHE_DIR"/
+              fi
+
+              test -f /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
+              echo "Using source-built Ceres config:"
+              ls -l /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
+            fi
           CIBW_ENVIRONMENT_LINUX: >-
-            CMAKE_PREFIX_PATH=/ceres-install
-            Ceres_DIR=/ceres-install/lib/cmake/Ceres
+            CMAKE_PREFIX_PATH=/ceres-install:/usr:/usr/local
           CIBW_BEFORE_ALL_MACOS: |
             rm -rf /tmp/vcpkg
             git clone --depth 1 https://github.com/microsoft/vcpkg.git /tmp/vcpkg
