@@ -104,9 +104,7 @@ jobs:
             else
               rm -rf ceres-solver /ceres-install
               git clone --depth 1 --branch 2.2.0 https://github.com/ceres-solver/ceres-solver.git
-              git -C ceres-solver submodule sync --recursive
-              git -C ceres-solver submodule update --init --recursive
-              test -f ceres-solver/third_party/abseil-cpp/CMakeLists.txt
+              test -f ceres-solver/CMakeLists.txt
               cmake -S ceres-solver -B ceres-solver/build \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=/ceres-install \
