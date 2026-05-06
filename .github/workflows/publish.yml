@@ -28,31 +28,40 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Patch robarma for MSVC compatibility
+      - name: Patch robarma compatibility quirks
         shell: python
         run: |
           from pathlib import Path
 
-          path = Path("external/robarma/include/solver.hpp")
-          text = path.read_text(encoding="utf-8")
-          old = (
+          def patch_file(path: Path, old: str, new: str, label: str) -> None:
+            text = path.read_text(encoding="utf-8")
+            if old in text:
+              path.write_text(text.replace(old, new), encoding="utf-8")
+              print(f"Applied {label}")
+            elif new in text:
+              print(f"{label} already applied")
+            else:
+              print(f"{label} pattern not found")
+
+          solver_path = Path("external/robarma/include/solver.hpp")
+          solver_old = (
               "        static double empty[] = {};\n"
               "        double *phi_ptr = params.params.phi.size() ? const_cast<double *>(params.params.phi.data()) : empty;\n"
               "        double *theta_ptr = params.params.theta.size() ? const_cast<double *>(params.params.theta.data()) : empty;\n"
           )
-          new = (
+          solver_new = (
               "        // MSVC does not allow zero-sized arrays; use distinct sentinel values.\n"
               "        static double empty_phi = 0.0;\n"
               "        static double empty_theta = 0.0;\n"
               "        double *phi_ptr = params.params.phi.size() ? const_cast<double *>(params.params.phi.data()) : &empty_phi;\n"
               "        double *theta_ptr = params.params.theta.size() ? const_cast<double *>(params.params.theta.data()) : &empty_theta;\n"
           )
+          patch_file(solver_path, solver_old, solver_new, "solver.hpp MSVC patch")
 
-          if old in text:
-              path.write_text(text.replace(old, new), encoding="utf-8")
-              print("Applied solver.hpp MSVC patch")
-          else:
-              print("solver.hpp already patched or pattern not found")
+          robust_path = Path("external/robarma/include/robust.hpp")
+          robust_old = "        auto r{d.reshaped()};\n"
+          robust_new = "        Eigen::Map<Vec<typename Derived::Scalar>> r(d.derived().data(), d.size());\n"
+          patch_file(robust_path, robust_old, robust_new, "robust.hpp Eigen<3.4 compatibility patch")
 
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel
