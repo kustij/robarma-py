@@ -28,6 +28,32 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Patch robarma for MSVC compatibility
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("external/robarma/include/solver.hpp")
+          text = path.read_text(encoding="utf-8")
+          old = (
+              "        static double empty[] = {};\n"
+              "        double *phi_ptr = params.params.phi.size() ? const_cast<double *>(params.params.phi.data()) : empty;\n"
+              "        double *theta_ptr = params.params.theta.size() ? const_cast<double *>(params.params.theta.data()) : empty;\n"
+          )
+          new = (
+              "        // MSVC does not allow zero-sized arrays; use distinct sentinel values.\n"
+              "        static double empty_phi = 0.0;\n"
+              "        static double empty_theta = 0.0;\n"
+              "        double *phi_ptr = params.params.phi.size() ? const_cast<double *>(params.params.phi.data()) : &empty_phi;\n"
+              "        double *theta_ptr = params.params.theta.size() ? const_cast<double *>(params.params.theta.data()) : &empty_theta;\n"
+          )
+
+          if old in text:
+              path.write_text(text.replace(old, new), encoding="utf-8")
+              print("Applied solver.hpp MSVC patch")
+          else:
+              print("solver.hpp already patched or pattern not found")
+
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel
 
@@ -36,7 +62,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ci-cache/ceres-install-linux
-          key: linux-ceres-install-2.3.0-v1
+          key: linux-ceres-install-2.2.0-v1
 
       - name: Prepare Windows vcpkg dependencies
         if: runner.os == 'Windows'
@@ -77,7 +103,7 @@ jobs:
               cp -a "$CACHE_DIR"/. /ceres-install/
             else
               rm -rf ceres-solver /ceres-install
-              git clone --depth 1 --branch 2.3.0 --recurse-submodules --shallow-submodules https://github.com/ceres-solver/ceres-solver.git
+              git clone --depth 1 --branch 2.2.0 --recurse-submodules --shallow-submodules https://github.com/ceres-solver/ceres-solver.git
               test -f ceres-solver/third_party/abseil-cpp/CMakeLists.txt
               cmake -S ceres-solver -B ceres-solver/build \
                 -DCMAKE_BUILD_TYPE=Release \
