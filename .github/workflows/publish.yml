@@ -59,9 +59,24 @@ jobs:
           patch_file(solver_path, solver_old, solver_new, "solver.hpp MSVC patch")
 
           robust_path = Path("external/robarma/include/robust.hpp")
-          robust_old = "        auto r{d.reshaped()};\n"
-          robust_new = "        Eigen::Map<Vec<typename Derived::Scalar>> r(d.derived().data(), d.size());\n"
-          patch_file(robust_path, robust_old, robust_new, "robust.hpp Eigen<3.4 compatibility patch")
+          robust_fix = (
+              "        auto *begin = d.derived().data();\n"
+              "        auto *end = begin + d.size();\n"
+              "        std::sort(begin, end);\n"
+              "        return d.size() % 2 == 0 ? (begin[(d.size() - 2) / 2] + begin[d.size() / 2]) / typename Derived::Scalar(2) : begin[d.size() / 2];\n"
+          )
+          robust_old_reshaped = (
+              "        auto r{d.reshaped()};\n"
+              "        std::sort(r.begin(), r.end());\n"
+              "        return r.size() % 2 == 0 ? r.segment((r.size() - 2) / 2, 2).mean() : r(r.size() / 2);\n"
+          )
+          robust_old_map = (
+              "        Eigen::Map<Vec<typename Derived::Scalar>> r(d.derived().data(), d.size());\n"
+              "        std::sort(r.begin(), r.end());\n"
+              "        return r.size() % 2 == 0 ? r.segment((r.size() - 2) / 2, 2).mean() : r(r.size() / 2);\n"
+          )
+          patch_file(robust_path, robust_old_reshaped, robust_fix, "robust.hpp Eigen median compatibility patch")
+          patch_file(robust_path, robust_old_map, robust_fix, "robust.hpp Eigen median compatibility patch")
 
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel
