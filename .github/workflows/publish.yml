@@ -29,13 +29,15 @@ jobs:
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
 
-      - name: Build wheels
+      - name: Debug Ceres install
+        if: runner.os == 'Linux'
         run: |
-          if [[ "$RUNNER_OS" == "Linux" ]]; then
-            python -m cibuildwheel --output-dir wheelhouse --config-setting=cmake.args="-DCMAKE_PREFIX_PATH=/ceres-install"
-          else
-            python -m cibuildwheel --output-dir wheelhouse
-          fi
+          echo "CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
+          find /ceres-install -name 'CeresConfig.cmake' || (echo 'CeresConfig.cmake not found!' && exit 1)
+          ls -lR /ceres-install
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: "cp311-* cp312-*"
           CIBW_BEFORE_ALL_LINUX: |
