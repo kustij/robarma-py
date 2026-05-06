@@ -38,6 +38,23 @@ jobs:
           path: .ci-cache/ceres-install-linux
           key: linux-ceres-install-2.3.0-v1
 
+      - name: Prepare Windows vcpkg dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Test-Path "C:\vcpkg") {
+            Remove-Item -Recurse -Force "C:\vcpkg"
+          }
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git C:\vcpkg
+          & C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+          & C:\vcpkg\vcpkg.exe install --triplet x64-windows eigen3 ceres
+          if (-not (Test-Path "C:\vcpkg\scripts\buildsystems\vcpkg.cmake")) {
+            throw "vcpkg toolchain file missing"
+          }
+          if (-not (Test-Path "C:\vcpkg\installed\x64-windows\share\eigen3\Eigen3Config.cmake")) {
+            throw "Eigen3Config.cmake missing in vcpkg installation"
+          }
+
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
@@ -91,15 +108,9 @@ jobs:
             git clone --depth 1 https://github.com/microsoft/vcpkg.git /tmp/vcpkg
             /tmp/vcpkg/bootstrap-vcpkg.sh -disableMetrics
             /tmp/vcpkg/vcpkg install eigen3 ceres
-          CIBW_ENVIRONMENT_MACOS: "CMAKE_TOOLCHAIN_FILE=/tmp/vcpkg/scripts/buildsystems/vcpkg.cmake"
-          CIBW_BEFORE_ALL_WINDOWS: |
-            if exist C:\vcpkg rmdir /s /q C:\vcpkg
-            git clone --depth 1 https://github.com/microsoft/vcpkg.git C:\vcpkg
-            C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-            C:\vcpkg\vcpkg.exe install --triplet x64-windows eigen3 ceres
-            if not exist C:\vcpkg\scripts\buildsystems\vcpkg.cmake exit /b 1
+          CIBW_ENVIRONMENT_MACOS: "VCPKG_ROOT=/tmp/vcpkg"
           CIBW_ENVIRONMENT_WINDOWS: >-
-            CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+            VCPKG_ROOT=C:/vcpkg
             VCPKG_TARGET_TRIPLET=x64-windows
 
       - name: Upload wheels as artifact

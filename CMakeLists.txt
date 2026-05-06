@@ -1,4 +1,14 @@
 cmake_minimum_required(VERSION 3.15)
+
+# Auto-enable vcpkg when VCPKG_ROOT is provided (useful in CI/cibuildwheel).
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE AND DEFINED ENV{VCPKG_ROOT})
+	set(_vcpkg_toolchain "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+	if(EXISTS "${_vcpkg_toolchain}")
+		set(CMAKE_TOOLCHAIN_FILE "${_vcpkg_toolchain}" CACHE STRING "vcpkg toolchain file")
+		message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+	endif()
+endif()
+
 project(robarma_py LANGUAGES CXX)
 
 # Set C++ standard
