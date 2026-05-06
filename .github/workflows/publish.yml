@@ -62,17 +62,21 @@ jobs:
             test -f /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
             echo "Installed Ceres config:"
             ls -l /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
-          CIBW_ENVIRONMENT_LINUX: "CMAKE_PREFIX_PATH=/ceres-install Ceres_DIR=/ceres-install/lib/cmake/Ceres"
+          CIBW_ENVIRONMENT_LINUX: "CMAKE_PREFIX_PATH=/ceres-install
+            Ceres_DIR=/ceres-install/lib/cmake/Ceres"
           CIBW_BEFORE_ALL_MACOS: |
             git clone https://github.com/microsoft/vcpkg.git
             ./vcpkg/bootstrap-vcpkg.sh
             ./vcpkg/vcpkg install eigen3 ceres
-          CIBW_ENVIRONMENT_MACOS: "CMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          CIBW_ENVIRONMENT_MACOS: "CMAKE_TOOLCHAIN_FILE=${{ github.workspace
+            }}/vcpkg/scripts/buildsystems/vcpkg.cmake"
           CIBW_BEFORE_ALL_WINDOWS: |
             git clone https://github.com/microsoft/vcpkg.git
             .\vcpkg\bootstrap-vcpkg.bat
             .\vcpkg\vcpkg.exe install --triplet x64-windows eigen3 ceres
-          CIBW_ENVIRONMENT_WINDOWS: "CMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+          CIBW_ENVIRONMENT_WINDOWS: "VCPKG_ROOT=${{ github.workspace }}/vcpkg
+            CMAKE_TOOLCHAIN_FILE=${{ github.workspace
+            }}/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
