@@ -2,7 +2,7 @@
 wheel.packages = ["robarma"]
 
 [build-system]
-requires = ["scikit-build-core", "setuptools", "wheel", "pybind11", "cmake"]
+requires = ["scikit-build-core", "setuptools", "wheel", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project]

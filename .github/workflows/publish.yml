@@ -1,8 +1,9 @@
 name: Build and publish wheels to PyPI
 
 on:
-  release:
-    types: [ published ]
+  push:
+    tags:
+      - "v*.*.*"
   workflow_dispatch:
 
 permissions:
@@ -29,29 +30,38 @@ jobs:
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
 
-      - name: Debug Ceres install
-        if: runner.os == 'Linux'
-        run: |
-          echo "CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
-          find /ceres-install -name 'CeresConfig.cmake' || (echo 'CeresConfig.cmake not found!' && exit 1)
-          ls -lR /ceres-install
-
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: "cp311-* cp312-*"
+          CIBW_BUILD: "cp312-*"
+          CIBW_SKIP: "*-musllinux*"
           CIBW_BEFORE_ALL_LINUX: |
-            yum install -y epel-release && yum install -y eigen3-devel cmake git gcc-c++ make
-            git clone https://github.com/ceres-solver/ceres-solver.git
-            cd ceres-solver
-            mkdir build && cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCUMENTATION=OFF -DCMAKE_INSTALL_PREFIX=/ceres-install
-            make -j$(nproc)
-            make install
-            echo "Searching for CeresConfig.cmake in /ceres-install:"
-            find /ceres-install -name 'CeresConfig.cmake' || (echo 'CeresConfig.cmake not found!' && exit 1)
-            cd /project
-          CIBW_ENVIRONMENT_LINUX: CMAKE_PREFIX_PATH=/ceres-install
+            set -eux
+            PKG_MGR=yum
+            if command -v dnf >/dev/null 2>&1; then PKG_MGR=dnf; fi
+            $PKG_MGR install -y epel-release
+            $PKG_MGR install -y cmake git gcc-c++ make eigen3-devel
+
+            rm -rf ceres-solver
+            git clone --depth 1 https://github.com/ceres-solver/ceres-solver.git
+            cmake -S ceres-solver -B ceres-solver/build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=/ceres-install \
+              -DCMAKE_INSTALL_LIBDIR=lib \
+              -DBUILD_TESTING=OFF \
+              -DBUILD_EXAMPLES=OFF \
+              -DBUILD_BENCHMARKS=OFF \
+              -DMINIGLOG=ON \
+              -DSUITESPARSE=OFF \
+              -DLAPACK=OFF
+            cmake --build ceres-solver/build --parallel
+            cmake --install ceres-solver/build
+
+            test -f /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
+            echo "Installed Ceres config:"
+            ls -l /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
+          CIBW_ENVIRONMENT_LINUX: "CMAKE_PREFIX_PATH=/ceres-install
+            Ceres_DIR=/ceres-install/lib/cmake/Ceres"
           CIBW_BEFORE_ALL_MACOS: |
             git clone https://github.com/microsoft/vcpkg.git
             ./vcpkg/bootstrap-vcpkg.sh
@@ -77,16 +87,13 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - name: Download all wheel artifacts
+      - name: Download wheel artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: wheels-*
           path: dist
-      - name: Flatten wheels
-        run: |
-          mkdir -p final_dist
-          find dist -name '*.whl' -exec cp {} final_dist/ \;
+          merge-multiple: true
       - name: Publish to PyPI (Trusted Publishing)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages_dir: final_dist
+          packages_dir: dist
