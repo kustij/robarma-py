@@ -43,7 +43,8 @@ jobs:
             $PKG_MGR install -y cmake git gcc-c++ make eigen3-devel
 
             rm -rf ceres-solver
-            git clone --depth 1 https://github.com/ceres-solver/ceres-solver.git
+            git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/ceres-solver/ceres-solver.git
+            test -f ceres-solver/third_party/abseil-cpp/CMakeLists.txt
             cmake -S ceres-solver -B ceres-solver/build \
               -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_INSTALL_PREFIX=/ceres-install \
