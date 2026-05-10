@@ -216,4 +216,5 @@ jobs:
       - name: Publish to PyPI (Trusted Publishing)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages_dir: dist
+          packages-dir: dist
+          skip-existing: true
