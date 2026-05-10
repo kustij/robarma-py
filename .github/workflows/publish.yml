@@ -18,15 +18,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      CERES_VERSION: "2.2.0"
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Set up Python
+      - name: Set up host Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          # This Python is only for running workflow helper scripts and cibuildwheel.
+          python-version: "3.x"
 
       - name: Patch robarma compatibility quirks
         shell: python
@@ -41,7 +44,19 @@ jobs:
             elif new in text:
               print(f"{label} already applied")
             else:
-              print(f"{label} pattern not found")
+              raise RuntimeError(f"{label} pattern not found in {path}")
+
+          def patch_file_any(path: Path, old_variants: tuple[str, ...], new: str, label: str) -> None:
+            text = path.read_text(encoding="utf-8")
+            if new in text:
+              print(f"{label} already applied")
+              return
+            for old in old_variants:
+              if old in text:
+                path.write_text(text.replace(old, new), encoding="utf-8")
+                print(f"Applied {label}")
+                return
+            raise RuntimeError(f"{label} pattern not found in {path}")
 
           solver_path = Path("external/robarma/include/solver.hpp")
           solver_old = (
@@ -75,8 +90,12 @@ jobs:
               "        std::sort(r.begin(), r.end());\n"
               "        return r.size() % 2 == 0 ? r.segment((r.size() - 2) / 2, 2).mean() : r(r.size() / 2);\n"
           )
-          patch_file(robust_path, robust_old_reshaped, robust_fix, "robust.hpp Eigen median compatibility patch")
-          patch_file(robust_path, robust_old_map, robust_fix, "robust.hpp Eigen median compatibility patch")
+            patch_file_any(
+              robust_path,
+              (robust_old_reshaped, robust_old_map),
+              robust_fix,
+              "robust.hpp Eigen median compatibility patch",
+            )
 
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel
@@ -86,7 +105,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ci-cache/ceres-install-linux
-          key: linux-ceres-install-2.2.0-v1
+          key: linux-ceres-install-${{ env.CERES_VERSION }}-v1
 
       - name: Prepare Windows vcpkg dependencies
         if: runner.os == 'Windows'
@@ -108,6 +127,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
+          # Wheel Python versions to build.
           CIBW_BUILD: "cp312-* cp313-* cp314-*"
           CIBW_SKIP: "*-musllinux*"
           CIBW_ARCHS_LINUX: "x86_64"
@@ -136,7 +156,7 @@ jobs:
                 cp -a "$CACHE_DIR"/. /ceres-install/
               else
                 rm -rf ceres-solver /ceres-install
-                git clone --depth 1 --branch 2.2.0 https://github.com/ceres-solver/ceres-solver.git
+                git clone --depth 1 --branch "$CERES_VERSION" https://github.com/ceres-solver/ceres-solver.git
                 test -f ceres-solver/CMakeLists.txt
                 cmake -S ceres-solver -B ceres-solver/build \
                   -DCMAKE_BUILD_TYPE=Release \
@@ -161,7 +181,7 @@ jobs:
               ls -l /ceres-install/lib/cmake/Ceres/CeresConfig.cmake
             fi
           CIBW_ENVIRONMENT_LINUX: >-
-            CMAKE_PREFIX_PATH=/ceres-install:/usr:/usr/local
+            CERES_VERSION=${{ env.CERES_VERSION }} CMAKE_PREFIX_PATH=/ceres-install:/usr:/usr/local
           CIBW_BEFORE_ALL_MACOS: |
             rm -rf /tmp/vcpkg
             git clone --depth 1 https://github.com/microsoft/vcpkg.git /tmp/vcpkg
