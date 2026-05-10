@@ -90,12 +90,12 @@ jobs:
               "        std::sort(r.begin(), r.end());\n"
               "        return r.size() % 2 == 0 ? r.segment((r.size() - 2) / 2, 2).mean() : r(r.size() / 2);\n"
           )
-            patch_file_any(
+          patch_file_any(
               robust_path,
               (robust_old_reshaped, robust_old_map),
               robust_fix,
               "robust.hpp Eigen median compatibility patch",
-            )
+          )
 
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel
